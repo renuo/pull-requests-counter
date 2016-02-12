@@ -20,6 +20,14 @@ Get your hands on the code :-)
 * Reload.
 * Enjoy!
 
+## TODO
+
+* Tests
+
+* List Pull Requests directly in the widget with quick buttons to merge them.
+
+* Update the number when pull requests are merged.
+
 ## Copyright
 
 Coypright 2016 [Renuo GmbH](https://www.renuo.ch/).

@@ -13,9 +13,7 @@ function save_options() {
             status.textContent = '';
         }, 750);
 
-        var bgPage = chrome.extension.getBackgroundPage();
-        bgPage.performCall();
-        bgPage.openPullRequestPage();
+        chrome.extension.getBackgroundPage().init();
     });
 }
 
