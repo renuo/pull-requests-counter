@@ -13,7 +13,6 @@
   },
   "permissions": [
     "activeTab",
-    "https://ajax.googleapis.com/",
     "https://api.github.com/",
     "alarms",
     "storage",
