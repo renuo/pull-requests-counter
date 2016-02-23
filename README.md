@@ -16,7 +16,7 @@ Get your hands on the code :-)
 * Create a new token for your GitHub account here (https://github.com/settings/tokens/)
 * Allow the following: repo (Full control of private repositories)
 * Open Chrome Extensions Console and add the extension.
-* In the options set your username and token.
+* In the options set your token.
 * Reload.
 * Enjoy!
 
