@@ -4,43 +4,36 @@ var errorColor = '#d9534f';
 var okLimit = 1;
 var warningLimit = 3;
 var pollInterval = 1;   //in minutes
-var issuesURL = 'https://api.github.com/orgs/renuo/issues';
+var issuesURL = 'https://api.github.com/user/issues';
 
 var pullRequestsURL = 'https://github.com/pulls/assigned';
 var optionsURL = 'chrome://extensions/?options=' + chrome.runtime.id;
 
-var currentURL = pullRequestsURL;
+var tokenOk = true;
 
 setInterval(performCall, pollInterval * (60 * 1000));  //every five minutes
 init();
 
 function openCurrentURL() {
-    chrome.tabs.create({'url': currentURL}, function (tab) {
-        // Tab opened.
-    });
+    var url = tokenOk ? pullRequestsURL : optionsURL;
+    chrome.tabs.create({'url': url});
 }
 function init() {
-    currentURL = pullRequestsURL;
+    tokenOk = true;
     chrome.browserAction.onClicked.removeListener(openCurrentURL);
     chrome.browserAction.onClicked.addListener(openCurrentURL);
     performCall();
 }
 
-function countPullRequests(issues) {
-    var counter = 0;
-    for (var i = 0; i < issues.length; i++) {
-        var issue = issues[i];
-        if (issue['pull_request']) {
-            counter++;
-        }
-    }
-    return counter;
+function isIssue(element) {
+    return !!element['pull_request'];
 }
-function elaborateResponse(issues) {
-    var counter = countPullRequests(issues);
 
-    chrome.browserAction.setBadgeText({text: '' + counter});
+function countPullRequests(issues) {
+    return issues.filter(isIssue).length;
+}
 
+function chooseColor(counter) {
     var color = errorColor;
     if (counter < okLimit) {
         color = successColor;
@@ -51,6 +44,16 @@ function elaborateResponse(issues) {
     else {
         color = errorColor;
     }
+    return color;
+}
+
+function elaborateResponse(issues) {
+    var counter = countPullRequests(issues);
+
+    chrome.browserAction.setBadgeText({text: '' + counter});
+
+    var color = chooseColor(counter);
+
     chrome.browserAction.setBadgeBackgroundColor({color: color});
 }
 
@@ -66,20 +69,18 @@ function performCall() {
             else if (xhr.status == 401) {
                 chrome.browserAction.setBadgeText({text: 'X'});
                 chrome.browserAction.setBadgeBackgroundColor({color: errorColor});
-                currentURL = optionsURL;
+                tokenOk = false;
             }
         }
     };
 
     var username, token;
     chrome.storage.sync.get({
-        username: null,
         token: null
     }, function (items) {
-        username = items.username;
         token = items.token;
         xhr.open('GET', issuesURL, true);
-        xhr.setRequestHeader('Authorization', 'Basic ' + btoa(username + ':' + token));
+        xhr.setRequestHeader('Authorization', 'Basic ' + btoa(':' + token));
         xhr.send();
     });
 }

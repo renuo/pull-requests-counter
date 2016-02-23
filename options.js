@@ -1,9 +1,7 @@
 // Saves options to chrome.storage
 function save_options() {
-    var username = document.getElementById('username').value;
     var token = document.getElementById('token').value;
     chrome.storage.sync.set({
-        username: username,
         token: token
     }, function() {
         // Update status to let user know options were saved.
@@ -19,10 +17,8 @@ function save_options() {
 
 function restore_options() {
     chrome.storage.sync.get({
-        username: null,
         token: null
     }, function(items) {
-        document.getElementById('username').value = items.username;
         document.getElementById('token').value = items.token;
     });
 }
