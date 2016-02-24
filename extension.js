@@ -4,7 +4,7 @@ var errorColor = '#d9534f';
 var okLimit = 1;
 var warningLimit = 3;
 var pollInterval = 1;   //in minutes
-var issuesURL = 'https://api.github.com/user/issues';
+var issuesURL = 'https://api.github.com/issues';
 
 var pullRequestsURL = 'https://github.com/pulls/assigned';
 var optionsURL = 'chrome://extensions/?options=' + chrome.runtime.id;
