@@ -18,27 +18,23 @@ var assigneesCounter = 0;
 var totalCounter = 0;
 var pullRequestURL = '';
 
+// open options page on a fresh installation
 chrome.runtime.onInstalled.addListener(function (object) {
     if (chrome.runtime.OnInstalledReason.INSTALL === object.reason) {
-        chrome.tabs.create({url: optionsURL}, function (tab) {
-
-        });
+        chrome.tabs.create({url: optionsURL});
     }
 });
 
-setInterval(performCall, pollInterval * (60 * 1000));  //every five minutes
+setInterval(performCall, pollInterval * (60 * 1000));
 init();
 
 function openCurrentURL() {
     if (tokenOk) {
-        if (totalCounter === 0) {
-            chrome.tabs.create({'url': assigneesURL});
-        }
-        else if (totalCounter === 1) {
+        if (totalCounter === 1) {
             chrome.tabs.create({'url': pullRequestURL});
         }
         else {
-            if (assigneesCounter > 0) {
+            if (totalCounter === 0 || assigneesCounter > 0) {
                 chrome.tabs.create({'url': assigneesURL});
             }
             if (reviewsCounter > 0) {
@@ -85,12 +81,14 @@ function elaborateResponse(reviewsResponse, assigneesResponse) {
     var color = chooseColor(assigneesCounter);
     chrome.browserAction.setBadgeBackgroundColor({color: color});
     if (totalCounter === 1) {
+        var response = null;
         if (reviewsCounter === 1) {
-            pullRequestURL = reviewsResponse.items[0].html_url
+            response = reviewsResponse
         }
         else {
-            pullRequestURL = assigneesResponse.items[0].html_url
+            response = assigneesResponse
         }
+        pullRequestURL = response.items[0].html_url
     }
 }
 
@@ -122,9 +120,9 @@ function performCall() {
         token: null
     }, function (items) {
         token = items.token;
-        executeRequest(searchReviewsURL, token, function(responseText) {
+        executeRequest(searchReviewsURL, token, function (responseText) {
             reviewsResponse = JSON.parse(responseText);
-            executeRequest(searchAssigneesURL, token, function(responseText) {
+            executeRequest(searchAssigneesURL, token, function (responseText) {
                 assigneesResponse = JSON.parse(responseText);
                 elaborateResponse(reviewsResponse, assigneesResponse);
             });
