@@ -4,9 +4,10 @@ var errorColor = '#d9534f';
 var okLimit = 1;
 var warningLimit = 3;
 var pollInterval = 1;   //in minutes
-var issuesURL = 'https://api.github.com/issues';
-var searchReviewsURL = 'https://api.github.com/search/issues?q=type:pr review-requested:coorasse is:open';
-var searchAssigneesURL = 'https://api.github.com/search/issues?q=type:pr assignee:coorasse is:open';
+var username = '';
+var usernameURL = 'https://api.github.com/user';
+var searchReviewsURL = 'https://api.github.com/search/issues?q=type:pr is:open review-requested:';
+var searchAssigneesURL = 'https://api.github.com/search/issues?q=type:pr is:open assignee:';
 
 var assigneesURL = 'https://github.com/pulls/assigned';
 var reviewsURL = 'https://github.com/pulls/review-requested';
@@ -25,7 +26,7 @@ chrome.runtime.onInstalled.addListener(function (object) {
     }
 });
 
-setInterval(performCall, pollInterval * (60 * 1000));
+setInterval(updateCounter, pollInterval * (60 * 1000));
 init();
 
 function openCurrentURL() {
@@ -51,7 +52,7 @@ function init() {
     tokenOk = true;
     chrome.browserAction.onClicked.removeListener(openCurrentURL);
     chrome.browserAction.onClicked.addListener(openCurrentURL);
-    performCall();
+    updateCounter();
 }
 
 
@@ -97,7 +98,7 @@ function executeRequest(url, token, successCallback) {
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) {
             if (xhr.status === 200) {
-                successCallback(xhr.responseText);
+                successCallback(JSON.parse(xhr.responseText));
             }
             else if (xhr.status === 401) {
                 chrome.browserAction.setBadgeText({text: 'X'});
@@ -111,19 +112,26 @@ function executeRequest(url, token, successCallback) {
     xhr.send();
 }
 
-function performCall() {
+function updateCounter() {
     var reviewsResponse;
     var assigneesResponse;
     var token;
 
     chrome.storage.sync.get({
-        token: null
+        token: null, username: null
     }, function (items) {
         token = items.token;
-        executeRequest(searchReviewsURL, token, function (responseText) {
-            reviewsResponse = JSON.parse(responseText);
-            executeRequest(searchAssigneesURL, token, function (responseText) {
-                assigneesResponse = JSON.parse(responseText);
+        username = items.username;
+        if (username === null) {
+            executeRequest(usernameURL, token, function (responseJSON) {
+                username = responseJSON.login;
+                chrome.storage.sync.set({username: username});
+            });
+        }
+        executeRequest(searchReviewsURL + username, token, function (responseJSON) {
+            reviewsResponse = responseJSON;
+            executeRequest(searchAssigneesURL + username, token, function (responseJSON) {
+                assigneesResponse = responseJSON;
                 elaborateResponse(reviewsResponse, assigneesResponse);
             });
         });
