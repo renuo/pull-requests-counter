@@ -1,6 +1,6 @@
 # Pull Requests Counter
 
-An icon in the browser shows the number of pull requests currently assigned to you or that require a code review from you.
+An icon in the browser shows the number of pull requests currently assigned to you or which require a code review from you.
 
 Just click on the icon to see the pull requests! 
 
