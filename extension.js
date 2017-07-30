@@ -4,33 +4,60 @@ var errorColor = '#d9534f';
 var okLimit = 1;
 var warningLimit = 3;
 var pollInterval = 1;   //in minutes
-var issuesURL = 'https://api.github.com/issues';
+var username = '';
+var usernameURL = 'https://api.github.com/user';
+var searchReviewsURL = 'https://api.github.com/search/issues?q=type:pr is:open review-requested:';
+var searchAssigneesURL = 'https://api.github.com/search/issues?q=type:pr is:open assignee:';
 
-var pullRequestsURL = 'https://github.com/pulls/assigned';
+var assigneesURL = 'https://github.com/pulls/assigned';
+var reviewsURL = 'https://github.com/pulls/review-requested';
 var optionsURL = 'chrome://extensions/?options=' + chrome.runtime.id;
 
 var tokenOk = true;
+var reviewsCounter = 0;
+var assigneesCounter = 0;
+var totalCounter = 0;
+var pullRequestURL = '';
 
-setInterval(performCall, pollInterval * (60 * 1000));  //every five minutes
+// open options page on a fresh installation
+chrome.runtime.onInstalled.addListener(function (object) {
+    if (chrome.runtime.OnInstalledReason.INSTALL === object.reason) {
+        chrome.tabs.create({url: optionsURL});
+    }
+});
+
+setInterval(updateCounter, pollInterval * (60 * 1000));
 init();
 
 function openCurrentURL() {
-    var url = tokenOk ? pullRequestsURL : optionsURL;
-    chrome.tabs.create({'url': url});
+    if (tokenOk) {
+        if (totalCounter === 1) {
+            chrome.tabs.create({'url': pullRequestURL});
+        }
+        else {
+            if (totalCounter === 0 || assigneesCounter > 0) {
+                chrome.tabs.create({'url': assigneesURL});
+            }
+            if (reviewsCounter > 0) {
+                chrome.tabs.create({'url': reviewsURL});
+            }
+        }
+    }
+    else {
+        chrome.tabs.create({'url': optionsURL});
+    }
 }
+
 function init() {
     tokenOk = true;
     chrome.browserAction.onClicked.removeListener(openCurrentURL);
     chrome.browserAction.onClicked.addListener(openCurrentURL);
-    performCall();
+    updateCounter();
 }
 
-function isIssue(element) {
-    return !!element['pull_request'];
-}
 
 function countPullRequests(issues) {
-    return issues.filter(isIssue).length;
+    return issues.total_count;
 }
 
 function chooseColor(counter) {
@@ -47,41 +74,67 @@ function chooseColor(counter) {
     return color;
 }
 
-function elaborateResponse(issues) {
-    var counter = countPullRequests(issues);
-
-    chrome.browserAction.setBadgeText({text: '' + counter});
-
-    var color = chooseColor(counter);
-
+function elaborateResponse(reviewsResponse, assigneesResponse) {
+    reviewsCounter = countPullRequests(reviewsResponse);
+    assigneesCounter = countPullRequests(assigneesResponse);
+    totalCounter = assigneesCounter + reviewsCounter;
+    chrome.browserAction.setBadgeText({text: '' + totalCounter});
+    var color = chooseColor(assigneesCounter);
     chrome.browserAction.setBadgeBackgroundColor({color: color});
+    if (totalCounter === 1) {
+        var response = null;
+        if (reviewsCounter === 1) {
+            response = reviewsResponse
+        }
+        else {
+            response = assigneesResponse
+        }
+        pullRequestURL = response.items[0].html_url
+    }
 }
 
-function performCall() {
+function executeRequest(url, token, successCallback) {
     var xhr = new XMLHttpRequest();
     xhr.onreadystatechange = function () {
-        if (xhr.readyState == 4) {
-            if (xhr.status == 200) {
-                var issues = JSON.parse(xhr.responseText);
-                elaborateResponse(issues);
-
+        if (xhr.readyState === 4) {
+            if (xhr.status === 200) {
+                successCallback(JSON.parse(xhr.responseText));
             }
-            else if (xhr.status == 401) {
+            else if (xhr.status === 401) {
                 chrome.browserAction.setBadgeText({text: 'X'});
                 chrome.browserAction.setBadgeBackgroundColor({color: errorColor});
                 tokenOk = false;
             }
         }
     };
+    xhr.open('GET', url, true);
+    xhr.setRequestHeader('Authorization', 'Basic ' + btoa(':' + token));
+    xhr.send();
+}
 
-    var username, token;
+function updateCounter() {
+    var reviewsResponse;
+    var assigneesResponse;
+    var token;
+
     chrome.storage.sync.get({
-        token: null
+        token: null, username: null
     }, function (items) {
         token = items.token;
-        xhr.open('GET', issuesURL, true);
-        xhr.setRequestHeader('Authorization', 'Basic ' + btoa(':' + token));
-        xhr.send();
+        username = items.username;
+        if (username === null) {
+            executeRequest(usernameURL, token, function (responseJSON) {
+                username = responseJSON.login;
+                chrome.storage.sync.set({username: username});
+            });
+        }
+        executeRequest(searchReviewsURL + username, token, function (responseJSON) {
+            reviewsResponse = responseJSON;
+            executeRequest(searchAssigneesURL + username, token, function (responseJSON) {
+                assigneesResponse = responseJSON;
+                elaborateResponse(reviewsResponse, assigneesResponse);
+            });
+        });
     });
 }
 
