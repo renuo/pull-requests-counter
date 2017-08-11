@@ -79,7 +79,7 @@ function elaborateResponse(reviewsResponse, assigneesResponse) {
     assigneesCounter = countPullRequests(assigneesResponse);
     totalCounter = assigneesCounter + reviewsCounter;
     chrome.browserAction.setBadgeText({text: '' + totalCounter});
-    var color = chooseColor(assigneesCounter);
+    var color = chooseColor(totalCounter);
     chrome.browserAction.setBadgeBackgroundColor({color: color});
     if (totalCounter === 1) {
         var response = null;
