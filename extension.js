@@ -61,7 +61,6 @@ function getHtmlUrls(issues) {
 function getUniquePullRequestUrls(reviewsResponse, assigneesResponse) {
     var reviews = getHtmlUrls(reviewsResponse);
     var assignees = getHtmlUrls(assigneesResponse);
-    reviewsCounter = reviews.length;
     return reviews.concat(assignees).filter(function(v, i, a){ return a.indexOf(v) === i});
 }
 
@@ -81,6 +80,7 @@ function chooseColor(counter) {
 
 function elaborateResponse(reviewsResponse, assigneesResponse) {
     pullRequestUrls = getUniquePullRequestUrls(reviewsResponse, assigneesResponse);
+    reviewsCounter = reviewsResponse.total_count;
     chrome.browserAction.setBadgeText({text: '' + pullRequestUrls.length});
     var color = chooseColor(pullRequestUrls.length);
     chrome.browserAction.setBadgeBackgroundColor({color: color});
