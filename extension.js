@@ -15,9 +15,7 @@ var optionsURL = 'chrome://extensions/?options=' + chrome.runtime.id;
 
 var tokenOk = true;
 var reviewsCounter = 0;
-var assigneesCounter = 0;
-var totalCounter = 0;
-var pullRequestURL = '';
+var pullRequestUrls = [];
 
 // open options page on a fresh installation
 chrome.runtime.onInstalled.addListener(function (object) {
@@ -31,11 +29,11 @@ init();
 
 function openCurrentURL() {
     if (tokenOk) {
-        if (totalCounter === 1) {
-            chrome.tabs.create({'url': pullRequestURL});
+        if (pullRequestUrls.length === 1) {
+            chrome.tabs.create({'url': pullRequestUrls[0]});
         }
         else {
-            if (totalCounter === 0 || assigneesCounter > 0) {
+            if (pullRequestUrls.length === 0 || pullRequestUrls.length !== reviewsCounter) {
                 chrome.tabs.create({'url': assigneesURL});
             }
             if (reviewsCounter > 0) {
@@ -56,8 +54,15 @@ function init() {
 }
 
 
-function countPullRequests(issues) {
-    return issues.total_count;
+function getHtmlUrls(issues) {
+    return issues.items.map(function(review) { return review.pull_request.html_url; });
+}
+
+function getUniquePullRequestUrls(reviewsResponse, assigneesResponse) {
+    var reviews = getHtmlUrls(reviewsResponse);
+    var assignees = getHtmlUrls(assigneesResponse);
+    reviewsCounter = reviews.length;
+    return reviews.concat(assignees).filter(function(v, i, a){ return a.indexOf(v) === i});
 }
 
 function chooseColor(counter) {
@@ -75,22 +80,10 @@ function chooseColor(counter) {
 }
 
 function elaborateResponse(reviewsResponse, assigneesResponse) {
-    reviewsCounter = countPullRequests(reviewsResponse);
-    assigneesCounter = countPullRequests(assigneesResponse);
-    totalCounter = assigneesCounter + reviewsCounter;
-    chrome.browserAction.setBadgeText({text: '' + totalCounter});
-    var color = chooseColor(totalCounter);
+    pullRequestUrls = getUniquePullRequestUrls(reviewsResponse, assigneesResponse);
+    chrome.browserAction.setBadgeText({text: '' + pullRequestUrls.length});
+    var color = chooseColor(pullRequestUrls.length);
     chrome.browserAction.setBadgeBackgroundColor({color: color});
-    if (totalCounter === 1) {
-        var response = null;
-        if (reviewsCounter === 1) {
-            response = reviewsResponse
-        }
-        else {
-            response = assigneesResponse
-        }
-        pullRequestURL = response.items[0].html_url
-    }
 }
 
 function executeRequest(url, token, successCallback) {
