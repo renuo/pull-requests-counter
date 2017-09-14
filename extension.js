@@ -28,12 +28,16 @@ setInterval(updateCounter, pollInterval * (60 * 1000));
 init();
 
 function openCurrentURL() {
+    function hasAssignedPullRequests() {
+        return pullRequestUrls.length !== reviewsCounter;
+    }
+
     if (tokenOk) {
         if (pullRequestUrls.length === 1) {
             chrome.tabs.create({'url': pullRequestUrls[0]});
         }
         else {
-            if (pullRequestUrls.length === 0 || pullRequestUrls.length !== reviewsCounter) {
+            if (pullRequestUrls.length === 0 || hasAssignedPullRequests()) {
                 chrome.tabs.create({'url': assigneesURL});
             }
             if (reviewsCounter > 0) {
