@@ -59,9 +59,9 @@ function getHtmlUrls(issues) {
 }
 
 function getUniquePullRequestUrls(reviewsResponse, assigneesResponse) {
-    var reviews = getHtmlUrls(reviewsResponse);
-    var assignees = getHtmlUrls(assigneesResponse);
-    return reviews.concat(assignees).filter(function(v, i, a){ return a.indexOf(v) === i});
+    var reviewPullRequestUrls = getHtmlUrls(reviewsResponse);
+    var assignedPullRequestUrls = getHtmlUrls(assigneesResponse);
+    return reviewPullRequestUrls.concat(assignedPullRequestUrls).filter(function(v, i, a){ return a.indexOf(v) === i});
 }
 
 function chooseColor(counter) {
