@@ -2,11 +2,13 @@
 
 An icon in the browser shows the number of pull requests currently assigned to you or which require a code review from you.
 
-Just click on the icon to see the pull requests! 
+Just click on the icon to see the pull requests!
 
 ## Install
 
-* Proceed to https://goo.gl/IoKg5m and install the extension
+* Proceed to the following URL and install the extension
+  * Chrome: https://goo.gl/IoKg5m
+  * Firefox: https://mzl.la/2EVTE0o
 * Create a new token for your GitHub account here (https://github.com/settings/tokens/new?description=pull-requests-counter&scopes=repo)
 * Save it and copy it in the options.
 * Save.
@@ -32,4 +34,4 @@ Get your hands on the code :-)
 
 ## Copyright
 
-Coypright 2017 [Renuo AG](https://www.renuo.ch/).
+Coypright 2019 [Renuo AG](https://www.renuo.ch/).
