@@ -34,4 +34,4 @@ Get your hands on the code :-)
 
 ## Copyright
 
-Coypright 2019 [Renuo AG](https://www.renuo.ch/).
+Copyright 2019 [Renuo AG](https://www.renuo.ch/).
