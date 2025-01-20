@@ -23,6 +23,7 @@ cd pull-requests-counter
 
 Get your hands on the code :-)
 
+* Enable the extension on `chrome://extensions/`
 
 ## TODO
 
